@@ -9,7 +9,6 @@ g.translate_target = 'en'
 -- Конфиг ale + eslint
 g.ale_fixers = {
     javascript = { 'eslint' },
-    go = {'gopls'},
 }
 g.ale_sign_error = '$'
 g.ale_sign_warning = '!'
