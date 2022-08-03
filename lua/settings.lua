@@ -1,3 +1,7 @@
+require('editorconfig').properties.foo = function(bufnr, val)
+    vim.b[bufnr].foo = val
+end
+
 local cmd = vim.cmd             -- execute Vim commands
 local exec = vim.api.nvim_exec  -- execute Vimscript
 local g = vim.g                 -- global variables
@@ -20,12 +24,12 @@ g.ale_completion_autoimport = 1
 -- Запуск линтера, только при сохранении
 g.ale_lint_on_text_changed = 'never'
 g.ale_lint_on_insert_leave = 0
--- g.syntastic_yaml_checkers = {'yamllint'}
+g.syntastic_yaml_checkers = {'yamllint'}
 -- -- Change these if you want
--- g.signify_sign_add               = '+'
--- g.signify_sign_delete            = '_'
--- g.signify_sign_delete_first_line = '‾'
--- g.signify_sign_change            = '~'
+--g.signify_sign_add               = '+'
+--g.signify_sign_delete            = '_'
+--g.signify_sign_delete_first_line = '‾'
+--g.signify_sign_change            = '~'
 
 -- -- I find the numbers disctracting
 -- g.signify_sign_show_count = 0
@@ -108,29 +112,6 @@ cmd [[ au FileType gitcommit let b:EditorConfig_disable = 1 ]]
 
 -- LSP settings
 local lsp_installer = require("nvim-lsp-installer")
-lsp_installer.on_server_ready(function(server)
-    local opts = {}
-    if server.name == "sumneko_lua" then
-        -- only apply these settings for the "sumneko_lua" server
-        opts.settings = {
-            Lua = {
-                diagnostics = {
-                    -- Get the language server to recognize the 'vim', 'use' global
-                    globals = {'vim', 'use'},
-                },
-                workspace = {
-                    -- Make the server aware of Neovim runtime files
-                    library = vim.api.nvim_get_runtime_file("", true),
-                },
-                -- Do not send telemetry data containing a randomized but unique identifier
-                telemetry = {
-                    enable = false,
-                },
-            },
-        }
-    end
-    server:setup(opts)
-end)
 
 -- nvim_comment
 local nvim_comment = require('nvim_comment')
@@ -182,47 +163,130 @@ cmp.setup {
 },
 }
 
--- telescope configuration
-local telescope = require("telescope").load_extension "file_browser"
+
+require("telescope").load_extension "file_browser"
+require('telescope').load_extension('ctags_outline')
+require('telescope').setup{
+    extensions = {
+        ctags_outline = {
+            --ctags option
+            ctags = {'gotags'},
+            --ctags filetype option
+            ft_opt = {
+                vim = '--vim-kinds=fk',
+                lua = '--lua-kinds=fk',
+            },
+        },
+    },
+}
 
 -- git
--- cmd [[ set statusline+=%{get(b:,'gitsigns_status','')} ]]
+cmd [[ set statusline+=%{get(b:,'gitsigns_status','')} ]]
 
--- go
-cmd [[ autocmd BufWritePre *.go :silent! lua require('go.format').goimport() ]]
-local go = require('go')
-go.setup(
-{
-    go = "go", -- set to go1.18beta1 if necessary
-    goimport = "gopls", -- if set to 'gopls' will use gopls format, also goimport
-    gopls_cmd = { "/Users/jtprogru/go/bin/gopls", "-logfile", "/Users/jtprogru/work/logs/gopls.log" },
-    fillstruct = "gopls",
-    gofmt = "gofumpt", -- if set to gopls will use gopls format
-    log_path = vim.fn.expand("$HOME") .. "/work/logs/gonvim.log",
-    lsp_cfg = { capabilities = capabilities }, -- true: use non-default gopls setup specified in go/lsp.lua
-    lsp_format_on_save = 1,
-    lsp_keymaps = true, -- true: use default keymaps defined in go/lsp.lua
+--go
+require('go').setup({
+
+    disable_defaults = false, -- true|false when true set false to all boolean settings and replace all table
+    -- settings with {}
+    go='go', -- go command, can be go[default] or go1.18beta1
+    goimport='gopls', -- goimport command, can be gopls[default] or goimport
+    fillstruct = 'gopls', -- can be nil (use fillstruct, slower) and gopls
+    gofmt = 'gofumpt', --gofmt cmd,
+    max_line_len = 128, -- max line length in golines format, Target maximum line length for golines
+    tag_transform = false, -- can be transform option("snakecase", "camelcase", etc) check gomodifytags for details and more options
+    gotests_template = "", -- sets gotests -template parameter (check gotests for details)
+    gotests_template_dir = "", -- sets gotests -template_dir parameter (check gotests for details)
+    comment_placeholder = '' ,  -- comment_placeholder your cool placeholder e.g. ﳑ       
+    icons = {breakpoint = '🧘', currentpos = '🏃'},  -- setup to `false` to disable icons setup
+    verbose = false,  -- output loginf in messages
+    lsp_cfg = false, -- true: use non-default gopls setup specified in go/lsp.lua
+    -- false: do nothing
+    -- if lsp_cfg is a table, merge table with with non-default gopls setup in go/lsp.lua, e.g.
+    --   lsp_cfg = {settings={gopls={matcher='CaseInsensitive', ['local'] = 'your_local_module_path', gofumpt = true }}}
+    lsp_gofumpt = false, -- true: set default gofmt in gopls format to gofumpt
+    lsp_on_attach = nil, -- nil: use on_attach function defined in go/lsp.lua,
+    --      when lsp_cfg is true
+    -- if lsp_on_attach is a function: use this function as on_attach function for gopls
+    lsp_keymaps = true, -- set to false to disable gopls/lsp keymap
+    lsp_codelens = true, -- set to false to disable codelens, true by default, you can use a function
+    -- function(bufnr)
+    --    vim.api.nvim_buf_set_keymap(bufnr, "n", "<space>F", "<cmd>lua vim.lsp.buf.formatting()<CR>", {noremap=true, silent=true})
+    -- end
+    -- to setup a table of codelens
+    lsp_diag_hdlr = true, -- hook lsp diag handler
     -- virtual text setup
     lsp_diag_virtual_text = { space = 0, prefix = "" },
     lsp_diag_signs = true,
     lsp_diag_update_in_insert = false,
-    lsp_fmt_async = false, -- async lsp.buf.format
-    go_boilplater_url = "https://github.com/thockin/go-build-template.git",
-    dap_debug = true,
-    dap_debug_gui = true,
+    lsp_document_formatting = true,
+    -- set to true: use gopls to format
+    -- false if you want to use other formatter tool(e.g. efm, nulls)
+    lsp_inlay_hints = {
+        enable = true,
+        -- Only show inlay hints for the current line
+        only_current_line = false,
+        -- Event which triggers a refersh of the inlay hints.
+        -- You can make this "CursorMoved" or "CursorMoved,CursorMovedI" but
+        -- not that this may cause higher CPU usage.
+        -- This option is only respected when only_current_line and
+        -- autoSetHints both are true.
+        only_current_line_autocmd = "CursorHold",
+        -- whether to show variable name before type hints with the inlay hints or not
+        -- default: false
+        show_variable_name = true,
+        -- prefix for parameter hints
+        parameter_hints_prefix = " ",
+        show_parameter_hints = true,
+        -- prefix for all the other hints (type, chaining)
+        other_hints_prefix = "=> ",
+        -- whether to align to the lenght of the longest line in the file
+        max_len_align = false,
+        -- padding from the left if max_len_align is true
+        max_len_align_padding = 1,
+        -- whether to align to the extreme right or not
+        right_align = false,
+        -- padding from the right if right_align is true
+        right_align_padding = 6,
+        -- The color of the hints
+        highlight = "Comment",
+    },
+    gopls_cmd = nil, -- if you need to specify gopls path and cmd, e.g {"/home/user/lsp/gopls", "-logfile","/var/log/gopls.log" }
+    gopls_remote_auto = true, -- add -remote=auto to gopls
+    dap_debug = true, -- set to false to disable dap
     dap_debug_keymap = true, -- true: use keymap for debugger defined in go/dap.lua
-    dap_vt = true, -- false, true and 'all frames'
-    dap_port = 38697, -- can be set to a number or `-1` so go.nvim will pickup a random port
-    build_tags = "", --- you can provide extra build tags for tests or debugger
-    textobjects = true, -- treesitter binding for text objects
-    test_runner = "go", -- one of {`go`, `richgo`, `dlv`, `ginkgo`}
+    -- false: do not use keymap in go/dap.lua.  you must define your own.
+    -- windows: use visual studio keymap
+    dap_debug_gui = true, -- set to true to enable dap gui, highly recommand
+    dap_debug_vt = true, -- set to true to enable dap virtual text
+    build_tags = "tag1,tag2", -- set default build tags
+    textobjects = true, -- enable default text jobects through treesittter-text-objects
+    test_runner = 'go', -- one of {`go`, `richgo`, `dlv`, `ginkgo`}
     verbose_tests = true, -- set to add verbose flag to tests
-    run_in_floaterm = false, -- set to true to run in float window.
+    run_in_floaterm = false, -- set to true to run in float window. :GoTermClose closes the floatterm
+    -- float term recommand if you use richgo/ginkgo with terminal color
+
+    trouble = false, -- true: use trouble to open quickfix
     test_efm = false, -- errorfomat for quickfix, default mix mode, set to true will be efm only
-    luasnip = true, -- enable included luasnip
-    username = "jtprogru",
-    useremail = "jtprogru@gmail.com",
-}
-)
+    luasnip = false, -- enable included luasnip snippets. you can also disable while add lua/snips folder to luasnip load
+    --  Do not enable this if you already added the path, that will duplicate the entries
+})
 
+local lsp_installer_servers = require'nvim-lsp-installer.servers'
 
+local server_available, requested_server = lsp_installer_servers.get_server("gopls")
+if server_available then
+    requested_server:on_ready(function ()
+        local opts = require'go.lsp'.config() -- config() return the go.nvim gopls setup
+        requested_server:setup(opts)
+    end)
+    if not requested_server:is_installed() then
+        -- Queue the server to be installed
+        requested_server:install()
+    end
+end
+
+vim.api.nvim_exec([[ autocmd BufWritePre *.go :silent! lua require('go.format').gofmt() ]], false)
+vim.api.nvim_exec([[ autocmd BufWritePre (InsertLeave?) <buffer> lua vim.lsp.buf.formatting_sync(nil,500) ]], false)
+vim.api.nvim_exec([[ autocmd BufWritePre *.go :silent! lua require('go.format').goimport() ]], false)
+
+vim.notify = require("notify")

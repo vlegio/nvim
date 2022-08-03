@@ -1,5 +1,9 @@
 vim.cmd [[ packadd packer.nvim ]]
 
+if packer_bootstrap then
+  require('packer').sync()
+end
+
 return require('packer').startup(function()
     -- Packer сам себя
     use 'wbthomason/packer.nvim'
@@ -23,9 +27,13 @@ return require('packer').startup(function()
     -- НАВИГАЦИЯ
     -----------------------------------------------------------
     -- Файловый менеджер
-    use { "nvim-telescope/telescope-file-browser.nvim", config = function() require('telescope-file-browser.nvim').setup() end, }
+    use { "nvim-telescope/telescope-file-browser.nvim" }
+
+    -- ctags
+    use {'fcying/telescope-ctags-outline.nvim'}
+
     -- Замена fzf и ack
-    use { 'nvim-telescope/telescope.nvim', config = function() require('telescope.nvim').setup() end, }
+    use { 'nvim-telescope/telescope.nvim' }
 
 
     -----------------------------------------------------------
@@ -46,8 +54,12 @@ return require('packer').startup(function()
     -- Snippets plugin
     use 'L3MON4D3/LuaSnip'
     -- Использование EditorConfig
-    use { 'editorconfig/editorconfig-vim', config = function() require('editorconfig.nvim').setup() end, }
+    use 'gpanders/editorconfig.nvim'
+	
+    -- TaskFile support
+    use 'superevilmegaco/Taskfile.nvim'
 
+   
 
     -----------------------------------------------------------
     -- Golang
@@ -58,7 +70,7 @@ return require('packer').startup(function()
     use { "rcarriga/nvim-dap-ui", requires = {"mfussenegger/nvim-dap"} }
     -- Автокомплит для Golang
     -- use 'Shougo/deoplete.nvim'
-    -- use { 'deoplete-plugins/deoplete-go', config = function() require('deoplete.nvim').cmd('make') end, }
+    --use { 'deoplete-plugins/deoplete-go', config = function() require('deoplete.nvim').cmd('make') end, }
 
     -- YAML
     use {
@@ -110,5 +122,6 @@ return require('packer').startup(function()
     use 'dense-analysis/ale'
     -- Git Blame
     use 'APZelos/blamer.nvim'
-
+	-- notify
+	use 'rcarriga/nvim-notify'
 end)

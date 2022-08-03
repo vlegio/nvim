@@ -11,14 +11,14 @@ if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
     vim.cmd [[packadd packer.nvim]]
 end
 
--- Use OSX clipboard to copy and to paste
-cmd [[ set clipboard+=unnamedplus ]]
-
 
 -----------------------------------------------------------
 -- Импорт модулей lua
 -----------------------------------------------------------
 require('plugins')
-require('settings')
+
 require('keymaps')
+
+require('settings')
+
 
