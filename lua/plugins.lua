@@ -59,7 +59,19 @@ return require('packer').startup(function()
     -- TaskFile support
     use 'superevilmegaco/Taskfile.nvim'
 
-   
+  
+    -----------------------------------------------------------
+    -- OpenSCAD
+    -----------------------------------------------------------
+		use {
+    'salkin-mada/openscad.nvim',
+    		config = function ()
+        require('openscad')
+        -- load snippets, note requires
+      	vim.g.openscad_load_snippets = true
+    	end,
+    	requires = 'L3MON4D3/LuaSnip'
+		}
 
     -----------------------------------------------------------
     -- Golang
